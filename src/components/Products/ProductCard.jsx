@@ -29,7 +29,7 @@ const ProductCard = ({
         <p className="product_title">{title}</p>
 
         <footer className="align_center product_info_footer">
-          <div className="align_center">
+          <div>
             <p className="align_center product_rating">
               <img src={star} alt="star" />
               {rating}
