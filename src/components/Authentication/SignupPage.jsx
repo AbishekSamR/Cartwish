@@ -12,7 +12,7 @@ const schema = z
     email: z.string().email(),
     password: z.string().min(8),
     confirmPassword: z.string(),
-    delivertAddress: z.string().min(15),
+    deliveryAddress: z.string().min(15),
   })
   .refine((data) => data.password === data.confirmPassword, {
     message: "Confirm Password does not match Password.",
@@ -21,6 +21,7 @@ const schema = z
 
 const SignupPage = () => {
   const [profilePic, setProfilePic] = useState(null);
+  const [formError, setFormError] = useState("");
 
   const {
     register,
@@ -29,7 +30,14 @@ const SignupPage = () => {
   } = useForm({ resolver: zodResolver(schema) });
 
   const onSubmit = async (formData) => {
-    await signup(formData, profilePic);
+    try {
+      await signup(formData, profilePic);
+      window.location = "/";
+    } catch (err) {
+      if (err.response && err.response.status === 400) {
+        setFormError(err.response.data.message);
+      }
+    }
   };
 
   return (
@@ -129,7 +137,7 @@ const SignupPage = () => {
             )}
           </div>
         </div>
-
+        {formError && <em className="form_error">{formError}</em>}
         <button className="search_button form_submit" type="submit">
           Submit
         </button>
