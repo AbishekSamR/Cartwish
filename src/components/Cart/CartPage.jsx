@@ -1,14 +1,21 @@
-import React, { useState } from "react";
+import React, { useState, useContext } from "react";
 import "./CartPage.css";
 
 import remove from "../../assets/remove.png";
-import user from "../../assets/user.webp";
+import UserContext from "../../contexts/UserContext";
 import Table from "../Common/Table";
 import QuantityInput from "../SingleProduct/QuantityInput";
 import { useEffect } from "react";
+import CartContext from "../../contexts/CartContext";
+import { addToCartAPI } from "./../../services/cartServices";
+import { checkoutAPI } from "../../services/orderServices";
+import { toast } from "react-toastify";
 
-const CartPage = ({ cart }) => {
+const CartPage = () => {
   const [subTotal, setSubTotal] = useState(0);
+  const user = useContext(UserContext);
+  const { cart, removeFromCart, updateCart, setCart } = useContext(CartContext);
+
   useEffect(() => {
     let total = 0;
     cart.forEach((item) => {
@@ -17,13 +24,29 @@ const CartPage = ({ cart }) => {
     setSubTotal(total);
   }, [cart]);
 
+  const checkout = () => {
+    const oldCart = [...cart];
+    setCart([]);
+    checkoutAPI()
+      .then(() => {
+        toast.success("Order placed successfully!");
+      })
+      .catch(() => {
+        toast.error("Something went wrong!");
+        setCart(oldCart);
+      });
+  };
+
   return (
     <section className="align_center cart_page">
       <div className="align_center user_info">
-        <img src={user} alt="User profile" />
+        <img
+          src={`http://localhost:5000/profile/${user?.profilePic}`}
+          alt="User profile"
+        />
         <div>
-          <p className="user_name">Harley</p>
-          <p className="user_email">harley@gmail.com</p>
+          <p className="user_name">Name: {user?.name}</p>
+          <p className="user_email">Email: {user?.email}</p>
         </div>
       </div>
 
@@ -32,13 +55,24 @@ const CartPage = ({ cart }) => {
           {cart.map(({ product, quantity }) => (
             <tr key={product._id}>
               <td>{product.title}</td>
-              <td>{product.price}</td>
+              <td>${product.price}</td>
               <td className="align_center table_quantity_input">
-                <QuantityInput quantity={quantity} stock={product.stock} />
+                <QuantityInput
+                  quantity={quantity}
+                  stock={product.stock}
+                  setQuantity={updateCart}
+                  cartPage={true}
+                  productId={product._id}
+                />
               </td>
               <td>${quantity * product.price}</td>
               <td>
-                <img src={remove} alt="" className="cart_remove_icon" />
+                <img
+                  src={remove}
+                  alt=""
+                  className="cart_remove_icon"
+                  onClick={() => removeFromCart(product._id)}
+                />
               </td>
             </tr>
           ))}
@@ -62,7 +96,9 @@ const CartPage = ({ cart }) => {
         </tbody>
       </table>
 
-      <button className="search_button checkout_button">Checkout</button>
+      <button className="search_button checkout_button" onClick={checkout}>
+        Checkout
+      </button>
     </section>
   );
 };
